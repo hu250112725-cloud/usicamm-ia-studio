@@ -1,0 +1,5 @@
+data/db.json
+.env
+server.out.log
+server.err.log
+node_modules/

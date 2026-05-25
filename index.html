@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>USICAMM IA Studio</title>
+    <meta
+      name="description"
+      content="Plataforma de estudio para USICAMM con diagnostico, simulador, ruta personalizada y tutor IA local."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <div class="brand auth-brand">
+          <div class="brand-mark" aria-hidden="true">U</div>
+          <div>
+            <strong>USICAMM IA</strong>
+            <span>Plataforma de estudio con progreso real</span>
+          </div>
+        </div>
+        <div class="auth-tabs" role="tablist">
+          <button class="active" data-auth-tab="login" type="button">Entrar</button>
+          <button data-auth-tab="register" type="button">Crear cuenta</button>
+        </div>
+
+        <form class="auth-form active" id="loginForm">
+          <label>
+            Correo
+            <input name="email" autocomplete="email" required type="email" />
+          </label>
+          <label>
+            Contraseña
+            <input name="password" autocomplete="current-password" required type="password" />
+          </label>
+          <button class="primary-button" type="submit">Iniciar sesion</button>
+        </form>
+
+        <form class="auth-form" id="registerForm">
+          <label>
+            Nombre
+            <input name="name" autocomplete="name" required type="text" />
+          </label>
+          <label>
+            Correo
+            <input name="email" autocomplete="email" required type="email" />
+          </label>
+          <label>
+            Contraseña
+            <input name="password" autocomplete="new-password" minlength="8" required type="password" />
+          </label>
+          <p class="email-only-note">Confirmaremos tu cuenta por email antes de entrar.</p>
+          <label>
+            Perfil
+            <select name="profile">
+              <option value="primaria">Primaria</option>
+              <option value="preescolar">Preescolar</option>
+              <option value="secundaria">Secundaria</option>
+              <option value="especial">Educacion especial</option>
+              <option value="ef">Educacion fisica</option>
+              <option value="telesecundaria">Telesecundaria</option>
+            </select>
+          </label>
+          <button class="primary-button" type="submit">Registrarme</button>
+        </form>
+        <form class="auth-form" id="verifyForm">
+          <div class="verify-copy">
+            <strong>Confirma tu cuenta</strong>
+            <span id="verifyTarget">Te enviamos un codigo.</span>
+          </div>
+          <label>
+            Codigo de 6 digitos
+            <input name="code" autocomplete="one-time-code" inputmode="numeric" maxlength="6" required type="text" />
+          </label>
+          <p class="dev-code hidden" id="devCodeBox"></p>
+          <button class="primary-button" type="submit">Confirmar y entrar</button>
+          <button class="ghost-button" id="resendCode" type="button">Reenviar codigo</button>
+        </form>
+        <p class="auth-error" id="authError" role="alert"></p>
+      </div>
+    </section>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacion principal">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">U</div>
+          <div>
+            <strong>USICAMM IA</strong>
+            <span>Estudio inteligente</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="dashboard" type="button">
+            <span aria-hidden="true">⌂</span>
+            Inicio
+          </button>
+          <button class="nav-item" data-view="diagnostico" type="button">
+            <span aria-hidden="true">✓</span>
+            Diagnostico
+          </button>
+          <button class="nav-item" data-view="ruta" type="button">
+            <span aria-hidden="true">▦</span>
+            Ruta
+          </button>
+          <button class="nav-item" data-view="simulador" type="button">
+            <span aria-hidden="true">◷</span>
+            Simulador
+          </button>
+          <button class="nav-item" data-view="tutor" type="button">
+            <span aria-hidden="true">✦</span>
+            Tutor IA
+          </button>
+          <button class="nav-item" data-view="biblioteca" type="button">
+            <span aria-hidden="true">▤</span>
+            Biblioteca
+          </button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span>Meta de hoy</span>
+          <strong id="todayGoal">15 reactivos</strong>
+          <div class="mini-progress" aria-hidden="true"><i id="goalBar"></i></div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Proceso de admision · Educacion basica</p>
+            <h1>Entrena para USICAMM con una ruta personalizada</h1>
+          </div>
+          <div class="profile-controls">
+            <div class="user-pill">
+              <span id="userName">Invitado</span>
+              <button class="ghost-button" id="logoutButton" type="button">Salir</button>
+            </div>
+            <label>
+              Perfil
+              <select id="profileSelect">
+                <option value="primaria">Primaria</option>
+                <option value="preescolar">Preescolar</option>
+                <option value="secundaria">Secundaria</option>
+                <option value="especial">Educacion especial</option>
+                <option value="ef">Educacion fisica</option>
+                <option value="telesecundaria">Telesecundaria</option>
+              </select>
+            </label>
+            <label>
+              Dias al examen
+              <input id="daysInput" min="1" max="365" type="number" value="45" />
+            </label>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboard">
+          <div class="dashboard-grid">
+            <article class="panel score-panel">
+              <div>
+                <p class="eyebrow">Preparacion general</p>
+                <h2 id="readiness">0%</h2>
+                <p id="readinessCopy">Responde el diagnostico para iniciar tu plan.</p>
+              </div>
+              <canvas id="studyMap" width="520" height="320" aria-label="Mapa visual de avance"></canvas>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Areas del instrumento</p>
+                  <h2>Tu avance</h2>
+                </div>
+                <button class="ghost-button" data-action="resetProgress" type="button">Reiniciar</button>
+              </div>
+              <div class="area-list" id="areaProgress"></div>
+            </article>
+
+            <article class="panel">
+              <p class="eyebrow">Siguiente mejor accion</p>
+              <h2 id="nextActionTitle">Haz tu diagnostico</h2>
+              <p id="nextActionText">
+                La app detectara tus areas debiles y ordenara los temas por prioridad.
+              </p>
+              <button class="primary-button" data-jump="diagnostico" type="button">Empezar ahora</button>
+            </article>
+
+            <article class="panel compact-list">
+              <p class="eyebrow">Formato USICAMM</p>
+              <h2>Practica lo que viene</h2>
+              <ul>
+                <li>90 reactivos en simulador completo.</li>
+                <li>3 opciones de respuesta por pregunta.</li>
+                <li>Directo, completamiento, ordenamiento y relacion.</li>
+                <li>Retroalimentacion inmediata por subarea.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="diagnostico">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Diagnostico adaptativo</p>
+                <h2>20 preguntas para ubicar tu nivel</h2>
+              </div>
+              <button class="ghost-button" id="newDiagnostic" type="button">Nuevo diagnostico</button>
+            </div>
+            <div id="diagnosticQuiz" class="quiz"></div>
+          </div>
+        </section>
+
+        <section class="view" id="ruta">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Plan de estudio</p>
+                <h2 id="routeTitle">Ruta sugerida</h2>
+              </div>
+              <button class="ghost-button" id="generatePlan" type="button">Actualizar plan</button>
+            </div>
+            <div class="route-grid" id="routeGrid"></div>
+          </div>
+        </section>
+
+        <section class="view" id="simulador">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Simulador completo</p>
+                <h2>90 reactivos tipo USICAMM</h2>
+              </div>
+              <div class="timer" id="timer">00:00</div>
+            </div>
+            <div class="simulator-actions" id="simulatorIntro">
+              <p>
+                Responde una prueba de 90 reactivos con mezcla de temas y formatos. Al finalizar veras
+                tu puntaje por area y recomendaciones de estudio.
+              </p>
+              <button class="primary-button" id="startSimulator" type="button">Iniciar simulador</button>
+            </div>
+            <div id="simulatorQuiz" class="quiz hidden"></div>
+          </div>
+        </section>
+
+        <section class="view" id="tutor">
+          <div class="tutor-layout">
+            <article class="panel tutor-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Tutor IA</p>
+                  <h2>Pregunta, repasa o pide reactivos</h2>
+                  <p class="ai-status" id="aiStatus">La IA responde con tu progreso guardado.</p>
+                </div>
+              </div>
+              <div class="chat-log" id="chatLog" aria-live="polite"></div>
+              <form class="chat-form" id="chatForm">
+                <input
+                  id="chatInput"
+                  autocomplete="off"
+                  placeholder="Ej. explicame la NEM, hazme 5 preguntas de normativa..."
+                  type="text"
+                />
+                <button class="primary-button" type="submit">Enviar</button>
+              </form>
+            </article>
+
+            <aside class="panel prompt-bank">
+              <p class="eyebrow">Atajos</p>
+              <button data-prompt="Crea un plan de estudio de 7 dias segun mi avance" type="button">
+                Plan de 7 dias
+              </button>
+              <button data-prompt="Genera 10 reactivos tipo USICAMM de mi area mas debil con respuestas y explicacion" type="button">
+                10 reactivos IA
+              </button>
+              <button data-prompt="Explica mis errores y dime que patrones debo corregir" type="button">
+                Analizar errores
+              </button>
+              <button data-prompt="Hazme 5 preguntas de aspectos normativos" type="button">
+                Preguntas de normativa
+              </button>
+              <button data-prompt="Explicame evaluacion formativa con ejemplo de aula" type="button">
+                Evaluacion formativa
+              </button>
+              <button data-prompt="Que debo estudiar hoy segun mi avance" type="button">
+                Que estudio hoy
+              </button>
+              <button data-prompt="Resume la Nueva Escuela Mexicana para examen" type="button">
+                Resumen NEM
+              </button>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="biblioteca">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Fuentes y temario</p>
+                <h2>Biblioteca oficial organizada</h2>
+              </div>
+              <input id="librarySearch" class="search-input" placeholder="Buscar tema o fuente..." type="search" />
+            </div>
+            <div class="library-grid" id="libraryGrid"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <button class="help-launcher" id="helpLauncher" type="button">Ayuda</button>
+    <aside class="help-drawer" id="helpDrawer" aria-label="Ayuda contextual">
+      <div class="help-head">
+        <div>
+          <strong>Guia rapida</strong>
+          <span id="helpViewLabel">Inicio</span>
+        </div>
+        <button id="closeHelp" type="button">Cerrar</button>
+      </div>
+      <div class="help-body" id="helpBody"></div>
+      <form class="help-question" id="helpQuestionForm">
+        <input id="helpQuestionInput" autocomplete="off" placeholder="Ej. donde esta el simulador" type="text" />
+        <button type="submit">Preguntar</button>
+      </form>
+      <p class="help-answer" id="helpAnswer"></p>
+      <div class="help-actions">
+        <button data-help-jump="diagnostico" type="button">Hacer diagnostico</button>
+        <button data-help-jump="tutor" type="button">Preguntar a la IA</button>
+      </div>
+    </aside>
+
+    <template id="questionTemplate">
+      <article class="question-card">
+        <div class="question-meta"></div>
+        <h3></h3>
+        <div class="options"></div>
+        <p class="feedback"></p>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
