@@ -22,6 +22,27 @@ const AREAS = [
   },
 ];
 
+const EMS_AREAS = [
+  {
+    id: "normativa",
+    name: "Aspectos normativos EMS",
+    sub: "Marco legal de la educacion media superior y principios de la Nueva Escuela Mexicana.",
+    color: "#167a58",
+  },
+  {
+    id: "intervencion",
+    name: "Marco Curricular Comun",
+    sub: "Implementacion del MCCEMS, recursos sociocognitivos, areas de conocimiento y organizacion educativa.",
+    color: "#315f9c",
+  },
+  {
+    id: "comunidad",
+    name: "Practica educativa",
+    sub: "Programa Aula, Escuela y Comunidad, gestion pedagogica y principios del servicio publico.",
+    color: "#b7791f",
+  },
+];
+
 const PROFILES = {
   primaria: "Primaria",
   preescolar: "Preescolar",
@@ -29,6 +50,7 @@ const PROFILES = {
   especial: "Educacion especial",
   ef: "Educacion fisica",
   telesecundaria: "Telesecundaria",
+  ems: "Preparatoria / Media superior",
 };
 
 const TOPICS = [
@@ -44,6 +66,21 @@ const TOPICS = [
   ["comunidad", "Mejora continua", "Diagnostico, prioridades, acciones, seguimiento y evaluacion."],
   ["comunidad", "Escuela y familias", "Comunicacion, corresponsabilidad y apoyo al aprendizaje."],
   ["comunidad", "Contextualizacion", "Vinculo entre saberes escolares, territorio y comunidad."],
+];
+
+const EMS_TOPICS = [
+  ["normativa", "Marco legal de la EMS", "Derecho a la educacion media superior, equidad, transparencia y legalidad del proceso."],
+  ["normativa", "Nueva Escuela Mexicana en EMS", "Formacion integral, inclusion, pertinencia, ciudadania y transformacion social."],
+  ["normativa", "Perfil profesional y afinidad", "Titulo, cedula, perfil afin al componente de formacion y requisitos de participacion."],
+  ["normativa", "Elementos multifactoriales EMS", "Curso de habilidades, cursos, formacion pedagogica, experiencia y apreciacion."],
+  ["intervencion", "Marco Curricular Comun EMS", "Recursos sociocognitivos, areas de conocimiento y curriculum fundamental/ampliado."],
+  ["intervencion", "Implementacion del MCCEMS", "Articulacion de saberes, progresiones, metas de aprendizaje y trabajo colegiado."],
+  ["intervencion", "Organizacion educativa", "Planeacion, seguimiento, ambientes de aprendizaje y atencion a trayectorias."],
+  ["intervencion", "Aprendizaje de jovenes en EMS", "Pertinencia, autonomia, proyecto de vida, pensamiento critico y bienestar."],
+  ["comunidad", "Programa Aula, Escuela y Comunidad", "Problemas del contexto, proyectos integradores y participacion comunitaria."],
+  ["comunidad", "Gestion pedagogica", "Diagnostico, mediacion docente, evaluacion formativa y mejora de la practica."],
+  ["comunidad", "Convivencia en planteles EMS", "Ambientes seguros, cultura de paz, protocolos y corresponsabilidad."],
+  ["comunidad", "Principios del servicio publico", "Legalidad, honradez, imparcialidad, transparencia, respeto y vocacion de servicio."],
 ];
 
 const BASE_QUESTIONS = [
@@ -145,18 +182,135 @@ const BASE_QUESTIONS = [
   },
 ];
 
+const EMS_QUESTIONS = [
+  {
+    area: "normativa",
+    format: "Cuestionamiento directo",
+    q: "Una persona aspirante a docente de EMS presenta titulo profesional, pero no es afin al componente de formacion que solicita. Que criterio debe revisarse primero?",
+    options: ["La afinidad del perfil profesional con el componente", "El numero de planteles cercanos a su domicilio", "La preferencia personal por el subsistema"],
+    answer: 0,
+    why: "El acuerdo de admision EMS exige cubrir el perfil profesional afin al componente de formacion al que se aspira.",
+  },
+  {
+    area: "normativa",
+    format: "Completamiento",
+    q: "El proceso de admision en EMS se desarrolla bajo principios de equidad, transparencia, legalidad y ____.",
+    options: ["discrecionalidad", "participacion en igualdad de condiciones", "preferencia por antiguedad informal"],
+    answer: 1,
+    why: "USICAMM plantea procesos publicos, transparentes, equitativos e imparciales para el ingreso al servicio.",
+  },
+  {
+    area: "normativa",
+    format: "Ordenamiento",
+    q: "Ordena los elementos multifactoriales de EMS desde la preparacion previa hasta la valoracion del instrumento.",
+    options: ["Curso de habilidades, cursos extracurriculares, formacion pedagogica, experiencia, apreciacion", "Apreciacion, experiencia, curso de habilidades, cursos, formacion", "Experiencia, apreciacion, formacion, cursos, curso de habilidades"],
+    answer: 0,
+    why: "La guia y el acuerdo organizan esos elementos como parte de la valoracion total del proceso de admision EMS.",
+  },
+  {
+    area: "normativa",
+    format: "Relacion de elementos",
+    q: "Relaciona el principio de la NEM en EMS con la decision docente mas congruente.",
+    options: ["Inclusion: ajustar apoyos para que nadie quede fuera", "Pertinencia: ignorar el contexto juvenil", "Humanismo: reducir la participacion estudiantil"],
+    answer: 0,
+    why: "La EMS busca educacion pertinente e inclusiva que favorezca aprendizaje, bienestar y participacion de las y los estudiantes.",
+  },
+  {
+    area: "intervencion",
+    format: "Cuestionamiento directo",
+    q: "En bachillerato, varios grupos tienen dificultades para argumentar por escrito. Que accion se alinea mejor con el MCCEMS?",
+    options: ["Trabajar lectura y escritura solo en Lengua y Comunicacion", "Articular progresiones y metas de aprendizaje entre asignaturas", "Suspender proyectos hasta que todos escriban igual"],
+    answer: 1,
+    why: "El MCCEMS promueve articulacion de saberes y recursos sociocognitivos para desarrollar aprendizajes integrales.",
+  },
+  {
+    area: "intervencion",
+    format: "Completamiento",
+    q: "La implementacion del Marco Curricular Comun requiere organizar saberes, recursos y experiencias para contribuir al logro de ____.",
+    options: ["aprendizajes y formacion integral", "solo calificaciones finales", "rutinas administrativas sin seguimiento"],
+    answer: 0,
+    why: "El MCCEMS orienta el trabajo docente hacia aprendizajes, habilidades, destrezas y formacion ciudadana.",
+  },
+  {
+    area: "intervencion",
+    format: "Ordenamiento",
+    q: "Ordena una secuencia de gestion pedagogica en EMS.",
+    options: ["Diagnostico, planeacion, mediacion, evaluacion formativa, ajuste", "Calificacion, cierre, diagnostico, mediacion, planeacion", "Planeacion, sancion, cierre, diagnostico, ajuste"],
+    answer: 0,
+    why: "La gestion pedagogica usa diagnostico y evaluacion formativa para ajustar la intervencion docente.",
+  },
+  {
+    area: "intervencion",
+    format: "Relacion de elementos",
+    q: "Selecciona la relacion correcta en el MCCEMS.",
+    options: ["Recursos sociocognitivos: herramientas para aprender y pensar", "Areas de conocimiento: tramites administrativos", "Progresiones: castigos escalonados por bajo desempeno"],
+    answer: 0,
+    why: "Los recursos sociocognitivos fortalecen comunicacion, pensamiento matematico, conciencia historica y cultura digital, entre otros aprendizajes.",
+  },
+  {
+    area: "comunidad",
+    format: "Cuestionamiento directo",
+    q: "El plantel identifica abandono escolar ligado a transporte, trabajo y baja motivacion. Que accion corresponde al Programa Aula, Escuela y Comunidad?",
+    options: ["Disenar un proyecto contextualizado con estudiantes, escuela y comunidad", "Culpar a las familias y cerrar el diagnostico", "Trabajar solo ejercicios aislados del libro"],
+    answer: 0,
+    why: "El PAEC vincula aula, plantel y comunidad para atender problemas reales del contexto mediante proyectos integradores.",
+  },
+  {
+    area: "comunidad",
+    format: "Completamiento",
+    q: "La convivencia armonica en planteles de EMS requiere protocolos, cultura de paz y ____.",
+    options: ["corresponsabilidad", "exclusion de estudiantes con conflicto", "castigos sin dialogo"],
+    answer: 0,
+    why: "La convivencia se fortalece con prevencion, participacion, corresponsabilidad y actuacion conforme a protocolos.",
+  },
+  {
+    area: "comunidad",
+    format: "Relacion de elementos",
+    q: "Relaciona el principio del servicio publico con la conducta adecuada.",
+    options: ["Imparcialidad: atender sin favoritismos", "Transparencia: ocultar criterios", "Legalidad: improvisar reglas personales"],
+    answer: 0,
+    why: "La funcion publica exige legalidad, honradez, imparcialidad, transparencia y respeto en la atencion educativa.",
+  },
+  {
+    area: "comunidad",
+    format: "Ordenamiento",
+    q: "Ordena un proyecto PAEC desde el problema del contexto hasta la mejora.",
+    options: ["Diagnostico comunitario, proyecto, participacion, evidencias, mejora", "Producto final, calificacion, diagnostico, participacion, cierre", "Tema aislado, examen, proyecto, diagnostico, mejora"],
+    answer: 0,
+    why: "El PAEC parte de problemas del contexto y usa participacion y evidencias para mejorar aprendizajes y comunidad.",
+  },
+];
+
 const LIBRARY = [
   {
     title: "Guia USICAMM Admisión Educación Básica 2026-2027",
     desc: "Estructura del instrumento, areas, subareas, formatos de reactivos y proceso de aplicacion.",
-    url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2026-2027/compilacion/EB/GUIAS/Guia_admision_tecnologias.pdf",
-    tags: ["guia", "90 reactivos", "admision"],
+    url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2026-2027/compilacion/EB/GUIAS/Guia_admision_EF.pdf",
+    tags: ["basica", "guia", "90 reactivos", "admision"],
+  },
+  {
+    title: "Guias USICAMM Educacion Basica 2025-2026",
+    desc: "Directorio oficial con guias por nivel y asignatura para admision y promocion horizontal.",
+    url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2025-2026/compilacion/EB/GUIAS/",
+    tags: ["basica", "guias", "primaria", "secundaria"],
   },
   {
     title: "Acuerdo de admisión Educación Básica",
     desc: "Elementos multifactoriales: formacion, promedio, cursos, experiencia y apreciacion.",
     url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2025-2026/compilacion/EB/Acuerdo_Admision_EB.pdf",
-    tags: ["puntaje", "multifactorial"],
+    tags: ["basica", "puntaje", "multifactorial"],
+  },
+  {
+    title: "Acuerdo de admision Educacion Media Superior 2026-2027",
+    desc: "Disposiciones, requisitos, elementos multifactoriales, asignacion y recursos para EMS.",
+    url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2026-2027/compilacion/EMS/Acuerdo_Admision_EMS.pdf",
+    tags: ["ems", "preparatoria", "admision", "acuerdo"],
+  },
+  {
+    title: "Convocatorias EMS 2025-2026",
+    desc: "Directorio oficial de convocatorias por subsistema: DGB, DGETI, COBACH, CECYTE, preparatorias estatales y telebachillerato.",
+    url: "https://usicamm.sep.gob.mx/usicamm_dsk08/2025-2026/AEMS/convocatoria/",
+    tags: ["ems", "preparatoria", "convocatorias"],
   },
   {
     title: "Portal oficial USICAMM",
@@ -189,6 +343,22 @@ let state = defaultClientState();
 let simulatorTimer = null;
 let simulatorStartedAt = 0;
 let saveTimer = null;
+
+function isEmsProfile(profile = state.profile) {
+  return profile === "ems";
+}
+
+function currentAreas() {
+  return isEmsProfile() ? EMS_AREAS : AREAS;
+}
+
+function currentTopics() {
+  return isEmsProfile() ? EMS_TOPICS : TOPICS;
+}
+
+function currentQuestions() {
+  return isEmsProfile() ? EMS_QUESTIONS : BASE_QUESTIONS;
+}
 
 const HELP_TEXT = {
   dashboard: {
@@ -285,7 +455,7 @@ function showAuthTab(tab) {
 }
 
 function scoreByArea() {
-  const totals = Object.fromEntries(AREAS.map((area) => [area.id, { ok: 0, total: 0 }]));
+  const totals = Object.fromEntries(currentAreas().map((area) => [area.id, { ok: 0, total: 0 }]));
   Object.values(state.answers).forEach((answer) => {
     totals[answer.area].total += 1;
     if (answer.correct) totals[answer.area].ok += 1;
@@ -297,16 +467,20 @@ function scoreByArea() {
 
 function readiness() {
   const scores = scoreByArea();
-  const quizScore = Math.round(AREAS.reduce((sum, area) => sum + scores[area.id], 0) / AREAS.length);
-  const topicScore = Math.round((state.completedTopics.length / TOPICS.length) * 100);
+  const areas = currentAreas();
+  const topics = currentTopics();
+  const quizScore = Math.round(areas.reduce((sum, area) => sum + scores[area.id], 0) / areas.length);
+  const topicScore = Math.round((state.completedTopics.length / topics.length) * 100);
   return Math.round(quizScore * 0.7 + topicScore * 0.3);
 }
 
 function makeQuestions(count, seed = "diagnostic") {
   const profile = PROFILES[state.profile];
+  const questions = currentQuestions();
+  const topics = currentTopics();
   return Array.from({ length: count }, (_, index) => {
-    const base = BASE_QUESTIONS[(index * 5 + seed.length) % BASE_QUESTIONS.length];
-    const topic = TOPICS.find((item) => item[0] === base.area)?.[1] || "USICAMM";
+    const base = questions[(index * 5 + seed.length) % questions.length];
+    const topic = topics.find((item) => item[0] === base.area)?.[1] || "USICAMM";
     return {
       ...base,
       id: `${seed}-${index}-${base.area}`,
@@ -353,7 +527,7 @@ function answerQuestion(question, optionIndex, node, mode) {
 }
 
 function areaName(id) {
-  return AREAS.find((area) => area.id === id)?.name || id;
+  return currentAreas().find((area) => area.id === id)?.name || id;
 }
 
 function renderDashboard() {
@@ -377,7 +551,7 @@ function updateDashboard() {
   const weakest = weakestArea();
   $("#nextActionTitle").textContent = weakest ? `Refuerza ${areaName(weakest)}` : "Haz tu diagnostico";
   $("#nextActionText").textContent = weakest
-    ? AREAS.find((area) => area.id === weakest).sub
+    ? currentAreas().find((area) => area.id === weakest).sub
     : "Responde las primeras preguntas para activar recomendaciones.";
 
   renderAreaProgress();
@@ -386,7 +560,7 @@ function updateDashboard() {
 
 function renderAreaProgress() {
   const scores = scoreByArea();
-  $("#areaProgress").innerHTML = AREAS.map(
+  $("#areaProgress").innerHTML = currentAreas().map(
     (area) => `
       <article class="area-card">
         <header><strong>${area.name}</strong><span>${scores[area.id]}%</span></header>
@@ -400,12 +574,12 @@ function renderAreaProgress() {
 function weakestArea() {
   const scores = scoreByArea();
   if (!Object.keys(state.answers).length) return null;
-  return AREAS.map((area) => area.id).sort((a, b) => scores[a] - scores[b])[0];
+  return currentAreas().map((area) => area.id).sort((a, b) => scores[a] - scores[b])[0];
 }
 
 function renderRoute() {
   const scores = scoreByArea();
-  const ordered = [...TOPICS].sort((a, b) => scores[a[0]] - scores[b[0]]);
+  const ordered = [...currentTopics()].sort((a, b) => scores[a[0]] - scores[b[0]]);
   $("#routeTitle").textContent = `Ruta para ${PROFILES[state.profile]} en ${state.days} dias`;
   $("#routeGrid").innerHTML = ordered
     .map(([area, title, desc], index) => {
@@ -470,14 +644,14 @@ function tutorReply(prompt) {
   const weak = weakestArea();
   if (text.includes("pregunta") || text.includes("reactivo")) {
     const area = text.includes("norm") ? "normativa" : text.includes("comunidad") ? "comunidad" : weak || "intervencion";
-    const sample = BASE_QUESTIONS.filter((q) => q.area === area).slice(0, 5);
+    const sample = currentQuestions().filter((q) => q.area === area).slice(0, 5);
     return sample
       .map((q, index) => `${index + 1}. ${q.q}\nRespuesta: ${q.options[q.answer]}. ${q.why}`)
       .join("\n\n");
   }
   if (text.includes("hoy") || text.includes("avance")) {
     const area = weak || "normativa";
-    const topic = TOPICS.find((item) => item[0] === area && !state.completedTopics.includes(item[1])) || TOPICS.find((item) => item[0] === area);
+    const topic = currentTopics().find((item) => item[0] === area && !state.completedTopics.includes(item[1])) || currentTopics().find((item) => item[0] === area);
     return `Hoy conviene estudiar ${topic[1]}. Despues haz 15 reactivos de ${areaName(area)} y revisa tus errores antes de pasar al siguiente tema.`;
   }
   if (text.includes("evaluacion")) {
@@ -538,14 +712,15 @@ function drawStudyMap() {
   const canvas = $("#studyMap");
   const ctx = canvas.getContext("2d");
   const scores = scoreByArea();
+  const areas = currentAreas();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.lineWidth = 3;
   ctx.font = "700 15px Segoe UI";
 
   const nodes = [
-    { x: 110, y: 90, area: AREAS[0] },
-    { x: 340, y: 80, area: AREAS[1] },
-    { x: 250, y: 235, area: AREAS[2] },
+    { x: 110, y: 90, area: areas[0] },
+    { x: 340, y: 80, area: areas[1] },
+    { x: 250, y: 235, area: areas[2] },
   ];
   ctx.strokeStyle = "#d9e2dc";
   ctx.beginPath();

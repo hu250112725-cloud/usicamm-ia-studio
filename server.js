@@ -178,7 +178,21 @@ function studySnapshot(user, state) {
 }
 
 function localAiFallback(prompt, snapshot, mode) {
+  const isEms = snapshot.perfil === "ems";
   if (mode === "questions") {
+    if (isEms) {
+      return [
+        "Aqui tienes reactivos tipo USICAMM para EMS:",
+        "",
+        "1. Que criterio se revisa para aspirar a un componente de formacion en EMS?",
+        "A) Afinidad del perfil profesional. B) Preferencia de plantel. C) Cercania al domicilio.",
+        "Respuesta: A. El perfil debe ser afin al componente de formacion.",
+        "",
+        "2. Que busca el MCCEMS?",
+        "A) Solo calificar al final. B) Articular saberes y formacion integral. C) Separar cada asignatura sin relacion.",
+        "Respuesta: B. El MCCEMS organiza recursos, areas y progresiones para aprendizajes integrales.",
+      ].join("\n");
+    }
     return [
       "Aqui tienes 5 reactivos tipo USICAMM:",
       "",
@@ -192,16 +206,26 @@ function localAiFallback(prompt, snapshot, mode) {
     ].join("\n");
   }
   if (mode === "plan") {
+    if (isEms) {
+      return `Plan sugerido para ${snapshot.perfil}: estudia primero el area con menor avance, completa un tema por dia y responde 15 reactivos diarios. Enfocate en marco legal EMS, MCCEMS, PAEC, gestion pedagogica y principios del servicio publico.`;
+    }
     return `Plan sugerido para ${snapshot.perfil}: estudia primero el area con menor avance, completa un tema por dia y responde 15 reactivos diarios. Hoy empieza con Nueva Escuela Mexicana, despues evaluacion formativa y cierra con CTE/mejora continua.`;
+  }
+  if (isEms) {
+    return "No hay API key configurada, asi que estoy usando modo local. Para EMS, prioriza marco legal, NEM, MCCEMS, recursos sociocognitivos, PAEC, gestion pedagogica y servicio publico.";
   }
   return "No hay API key configurada, asi que estoy usando modo local. Para estudiar USICAMM, prioriza derechos de NNA, inclusion, NEM, planeacion didactica, evaluacion formativa, CTE y vinculo escuela-comunidad.";
 }
 
 function aiSystemPrompt(snapshot, mode) {
+  const enfoque =
+    snapshot.perfil === "ems"
+      ? "Usa el enfoque de admision a Educacion Media Superior: aspectos normativos EMS, MCCEMS, organizacion educativa, PAEC, gestion pedagogica y principios del servicio publico."
+      : "Usa el enfoque de admision a Educacion Basica: aspectos normativos, intervencion docente, escuela y comunidad.";
   return [
     "Eres un tutor experto para preparar docentes mexicanos para USICAMM.",
     "Responde en espanol claro, directo y util para estudiar.",
-    "Usa el enfoque de admision a Educacion Basica: aspectos normativos, intervencion docente, escuela y comunidad.",
+    enfoque,
     "Cuando generes reactivos, usa 3 opciones, una respuesta correcta y explicacion breve.",
     "No inventes citas legales exactas. Si no estas seguro, dilo y recomienda revisar la fuente oficial.",
     "Personaliza con este avance del estudiante:",
