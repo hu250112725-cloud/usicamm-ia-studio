@@ -34,6 +34,26 @@ Tambien funciona con:
 npm start
 ```
 
+## Desplegar en Render
+
+El repo incluye `render.yaml`, asi que puedes crear el servicio desde Render como Blueprint.
+
+1. Sube este repo a GitHub.
+2. En Render entra a **New +** y elige **Blueprint**.
+3. Selecciona el repo.
+4. Render leera `render.yaml`.
+5. En las variables marcadas como secretas agrega:
+
+```env
+GROQ_API_KEY=tu_key_de_groq
+RESEND_API_KEY=tu_key_de_resend
+EMAIL_FROM=USICAMM IA <tu_email_verificado_en_resend>
+```
+
+No definas `PORT` en Render. Render asigna el puerto automaticamente y la app ya usa `process.env.PORT`.
+
+Importante: esta version guarda usuarios en `data/db.json`. Para usuarios reales necesitas un disco persistente en Render o migrar a PostgreSQL. Si no usas almacenamiento persistente, los usuarios pueden perderse cuando Render reinicie el servicio.
+
 ## Si ves HTML en vez de JSON
 
 Ese error pasa cuando se abre la pagina con un servidor estatico, pero no con el backend de `server.js`.
