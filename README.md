@@ -50,7 +50,7 @@ GROQ_API_KEY=tu_key_de_groq
 
 No definas `PORT` en Render. Render asigna el puerto automaticamente y la app ya usa `process.env.PORT`.
 
-Importante: esta version guarda usuarios en `data/db.json`. Para usuarios reales necesitas un disco persistente en Render o migrar a PostgreSQL. Si no usas almacenamiento persistente, los usuarios pueden perderse cuando Render reinicie el servicio.
+El Blueprint tambien crea una base PostgreSQL y conecta `DATABASE_URL` automaticamente. Eso evita perder usuarios y progreso cuando Render reinicia o despliega una nueva version.
 
 ## Si ves HTML en vez de JSON
 
@@ -76,7 +76,7 @@ Debe mostrar algo como:
 
 ## Base de datos
 
-La app crea automaticamente `data/db.json` para guardar usuarios, sesiones y progreso. Ese archivo esta ignorado por Git para no subir datos reales.
+En Render, la app usa PostgreSQL mediante `DATABASE_URL`. En desarrollo local, si no defines `DATABASE_URL`, crea automaticamente `data/db.json` para guardar usuarios, sesiones y progreso. Ese archivo esta ignorado por Git para no subir datos reales.
 
 ## Seguridad de cuentas
 

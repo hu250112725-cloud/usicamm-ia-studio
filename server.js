@@ -18,6 +18,9 @@ const PUBLIC_TYPES = {
 };
 const PUBLIC_FILES = new Set(["/index.html", "/styles.css", "/app.js"]);
 const LOGIN_ATTEMPTS = new Map();
+const USE_POSTGRES = Boolean(process.env.DATABASE_URL);
+let pgPool = null;
+let pgReady = null;
 
 const AI_MODEL = process.env.GROQ_MODEL || process.env.OPENAI_MODEL || "llama-3.1-8b-instant";
 const AI_BASE_URL = (process.env.GROQ_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.groq.com/openai/v1").replace(/\/$/, "");
@@ -63,6 +66,129 @@ function writeDb(db) {
     fs.chmodSync(DB_FILE, 0o600);
   } catch {
     // Windows permissions are handled by the user profile ACL.
+  }
+}
+
+function dbUser(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    profile: row.profile,
+    verifiedAt: row.verified_at ? new Date(row.verified_at).toISOString() : null,
+    passwordHash: row.password_hash,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  };
+}
+
+function dbSession(row) {
+  return {
+    token: row.token,
+    userId: row.user_id,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+    expiresAt: row.expires_at ? new Date(row.expires_at).toISOString() : null,
+  };
+}
+
+async function ensurePostgres() {
+  if (!USE_POSTGRES) return;
+  if (!pgReady) {
+    pgReady = (async () => {
+      const { Pool } = require("pg");
+      pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+      await pgPool.query(`
+        create table if not exists users (
+          id text primary key,
+          name text not null,
+          email text unique not null,
+          profile text not null,
+          verified_at timestamptz,
+          password_hash text not null,
+          created_at timestamptz not null
+        );
+        create table if not exists sessions (
+          token text primary key,
+          user_id text not null references users(id) on delete cascade,
+          created_at timestamptz not null,
+          expires_at timestamptz not null
+        );
+        create table if not exists states (
+          user_id text primary key references users(id) on delete cascade,
+          data jsonb not null
+        );
+      `);
+    })();
+  }
+  await pgReady;
+}
+
+async function readStore() {
+  if (!USE_POSTGRES) return readDb();
+  await ensurePostgres();
+  const [users, sessions, states] = await Promise.all([
+    pgPool.query("select * from users order by created_at asc"),
+    pgPool.query("select * from sessions where expires_at > now() order by created_at asc"),
+    pgPool.query("select * from states"),
+  ]);
+  return {
+    users: users.rows.map(dbUser),
+    sessions: sessions.rows.map(dbSession),
+    states: Object.fromEntries(states.rows.map((row) => [row.user_id, row.data])),
+  };
+}
+
+async function writeStore(db) {
+  if (!USE_POSTGRES) {
+    writeDb(db);
+    return;
+  }
+  await ensurePostgres();
+  const client = await pgPool.connect();
+  try {
+    await client.query("begin");
+    for (const user of db.users) {
+      await client.query(
+        `insert into users (id, name, email, profile, verified_at, password_hash, created_at)
+         values ($1, $2, $3, $4, $5, $6, $7)
+         on conflict (id) do update set
+           name = excluded.name,
+           email = excluded.email,
+           profile = excluded.profile,
+           verified_at = excluded.verified_at,
+           password_hash = excluded.password_hash`,
+        [user.id, user.name, user.email, user.profile, user.verifiedAt, user.passwordHash, user.createdAt],
+      );
+    }
+
+    const tokens = db.sessions.map((session) => session.token);
+    if (tokens.length) {
+      await client.query("delete from sessions where not (token = any($1::text[]))", [tokens]);
+    } else {
+      await client.query("delete from sessions");
+    }
+    for (const session of db.sessions) {
+      await client.query(
+        `insert into sessions (token, user_id, created_at, expires_at)
+         values ($1, $2, $3, $4)
+         on conflict (token) do update set expires_at = excluded.expires_at`,
+        [session.token, session.userId, session.createdAt, session.expiresAt],
+      );
+    }
+
+    for (const [userId, state] of Object.entries(db.states || {})) {
+      await client.query(
+        `insert into states (user_id, data)
+         values ($1, $2::jsonb)
+         on conflict (user_id) do update set data = excluded.data`,
+        [userId, JSON.stringify(state)],
+      );
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -274,7 +400,7 @@ function auth(req, db) {
 }
 
 async function handleApi(req, res) {
-  const db = readDb();
+  const db = await readStore();
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
@@ -304,7 +430,7 @@ async function handleApi(req, res) {
       db.states[user.id] = defaultState(profile);
       const token = crypto.randomBytes(32).toString("hex");
       db.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString(), expiresAt: expiryDate() });
-      writeDb(db);
+      await writeStore(db);
       return json(res, 201, { user: publicUser(user), state: db.states[user.id] }, sessionHeader(token));
     }
 
@@ -321,14 +447,14 @@ async function handleApi(req, res) {
       const token = crypto.randomBytes(32).toString("hex");
       db.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString(), expiresAt: expiryDate() });
       db.states[user.id] ||= defaultState(user.profile);
-      writeDb(db);
+      await writeStore(db);
       return json(res, 200, { user: publicUser(user), state: db.states[user.id] }, sessionHeader(token));
     }
 
     if (req.method === "POST" && url.pathname === "/api/logout") {
       const token = parseCookies(req).usicamm_session;
       const next = { ...db, sessions: db.sessions.filter((item) => item.token !== token) };
-      writeDb(next);
+      await writeStore(next);
       return json(res, 200, { ok: true }, { "set-cookie": "usicamm_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0" });
     }
 
@@ -337,7 +463,7 @@ async function handleApi(req, res) {
 
     if (req.method === "GET" && url.pathname === "/api/me") {
       db.states[user.id] ||= defaultState(user.profile);
-      writeDb(db);
+      await writeStore(db);
       return json(res, 200, { user: publicUser(user), state: db.states[user.id] });
     }
 
@@ -348,7 +474,7 @@ async function handleApi(req, res) {
         ...body,
         updatedAt: new Date().toISOString(),
       };
-      writeDb(db);
+      await writeStore(db);
       return json(res, 200, { state: db.states[user.id] });
     }
 
