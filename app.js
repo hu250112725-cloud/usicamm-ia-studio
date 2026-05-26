@@ -289,13 +289,7 @@ function showVerification(payload) {
   pendingVerification = payload;
   showAuthTab("verify");
   $("#verifyTarget").textContent = `Codigo enviado por email a ${payload.contact}.`;
-  if (payload.devCode) {
-    $("#devCodeBox").classList.remove("hidden");
-    $("#devCodeBox").textContent = `Modo desarrollo: usa el codigo ${payload.devCode}`;
-  } else {
-    $("#devCodeBox").classList.add("hidden");
-    $("#devCodeBox").textContent = "";
-  }
+  $("#authError").textContent = "";
   $("#authScreen").classList.add("active");
   document.body.classList.add("locked");
 }

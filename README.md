@@ -68,7 +68,7 @@ La app crea automaticamente `data/db.json` para guardar usuarios, sesiones y pro
 - Hay limite de intentos para registro, login y verificacion.
 - Las cuentas nuevas deben confirmar un codigo por email.
 
-En desarrollo, si no hay proveedor de email configurado, el codigo se muestra en pantalla para que puedas probar el flujo. Para que sea real en produccion, define `NODE_ENV=production` y conecta Resend:
+La verificacion de cuenta usa email real con Resend. Define `NODE_ENV=production` y conecta Resend:
 
 ```env
 NODE_ENV=production
@@ -78,7 +78,7 @@ RESEND_API_KEY=tu_api_key_de_resend
 EMAIL_FROM=USICAMM IA <no-reply@tudominio.com>
 ```
 
-Si `NODE_ENV=production` y no configuras el proveedor correspondiente, la app no mostrara el codigo en pantalla: devolvera un error para evitar verificaciones falsas.
+Si no configuras Resend, la app devolvera un error y no confirmara cuentas de forma falsa.
 
 ## IA
 

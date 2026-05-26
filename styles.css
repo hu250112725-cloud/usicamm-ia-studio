@@ -1449,19 +1449,9 @@ h1 {
   color: var(--green-2);
 }
 
-.verify-copy span,
-.dev-code {
+.verify-copy span {
   color: var(--muted);
   font-size: 0.9rem;
-}
-
-.dev-code {
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  background: #fff7e6;
-  color: #8a5a00;
-  font-weight: 700;
 }
 
 .help-launcher {

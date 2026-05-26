@@ -181,25 +181,15 @@ function createVerification(db, user) {
 }
 
 function verificationPayload(user, code) {
-  const devMode = !process.env.EMAIL_PROVIDER && process.env.NODE_ENV !== "production";
   return {
     requiresVerification: true,
     userId: user.id,
     channel: "email",
     contact: maskContact(verificationContact(user)),
-    devCode: devMode ? code : undefined,
   };
 }
 
-function isDevVerificationMode(user) {
-  const hasProvider = Boolean(process.env.EMAIL_PROVIDER);
-  return !hasProvider && process.env.NODE_ENV !== "production";
-}
-
 async function sendVerificationCode(user, code) {
-  if (isDevVerificationMode(user)) {
-    return { devCode: code };
-  }
   return sendEmailCode(user.email, code);
 }
 
