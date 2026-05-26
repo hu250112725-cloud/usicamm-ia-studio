@@ -50,7 +50,6 @@
             Contraseña
             <input name="password" autocomplete="new-password" minlength="8" required type="password" />
           </label>
-          <p class="email-only-note">Confirmaremos tu cuenta por email antes de entrar.</p>
           <label>
             Perfil
             <select name="profile">
@@ -63,18 +62,6 @@
             </select>
           </label>
           <button class="primary-button" type="submit">Registrarme</button>
-        </form>
-        <form class="auth-form" id="verifyForm">
-          <div class="verify-copy">
-            <strong>Confirma tu cuenta</strong>
-            <span id="verifyTarget">Te enviamos un codigo.</span>
-          </div>
-          <label>
-            Codigo de 6 digitos
-            <input name="code" autocomplete="one-time-code" inputmode="numeric" maxlength="6" required type="text" />
-          </label>
-          <button class="primary-button" type="submit">Confirmar y entrar</button>
-          <button class="ghost-button" id="resendCode" type="button">Reenviar codigo</button>
         </form>
         <p class="auth-error" id="authError" role="alert"></p>
       </div>

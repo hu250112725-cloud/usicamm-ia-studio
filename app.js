@@ -189,7 +189,6 @@ let state = defaultClientState();
 let simulatorTimer = null;
 let simulatorStartedAt = 0;
 let saveTimer = null;
-let pendingVerification = null;
 
 const HELP_TEXT = {
   dashboard: {
@@ -283,15 +282,6 @@ function showAuthTab(tab) {
   $$("[data-auth-tab]").forEach((item) => item.classList.toggle("active", item.dataset.authTab === tab));
   $$(".auth-form").forEach((form) => form.classList.toggle("active", form.id === `${tab}Form`));
   $("#authError").textContent = "";
-}
-
-function showVerification(payload) {
-  pendingVerification = payload;
-  showAuthTab("verify");
-  $("#verifyTarget").textContent = `Codigo enviado por email a ${payload.contact}.`;
-  $("#authError").textContent = "";
-  $("#authScreen").classList.add("active");
-  document.body.classList.add("locked");
 }
 
 function scoreByArea() {
@@ -602,11 +592,7 @@ function bindEvents() {
       });
       applySession(payload);
     } catch (error) {
-      if (error.payload?.requiresVerification) {
-        showVerification(error.payload);
-      } else {
-        showAuth(error.message);
-      }
+      showAuth(error.message);
     }
   });
 
@@ -620,49 +606,12 @@ function bindEvents() {
           name: form.get("name"),
           email: form.get("email"),
           password: form.get("password"),
-          verificationChannel: "email",
           profile: form.get("profile"),
         },
       });
-      if (payload.requiresVerification) {
-        showVerification(payload);
-      } else {
-        applySession(payload);
-      }
-    } catch (error) {
-      showAuth(error.message);
-    }
-  });
-
-  $("#verifyForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    if (!pendingVerification?.userId) {
-      showAuth("Primero crea una cuenta o inicia sesion.");
-      return;
-    }
-    try {
-      const payload = await api("/api/verify", {
-        method: "POST",
-        body: { userId: pendingVerification.userId, code: form.get("code") },
-      });
-      pendingVerification = null;
       applySession(payload);
     } catch (error) {
-      $("#authError").textContent = error.message;
-    }
-  });
-
-  $("#resendCode").addEventListener("click", async () => {
-    if (!pendingVerification?.userId) return;
-    try {
-      const payload = await api("/api/resend-verification", {
-        method: "POST",
-        body: { userId: pendingVerification.userId },
-      });
-      showVerification(payload);
-    } catch (error) {
-      $("#authError").textContent = error.message;
+      showAuth(error.message);
     }
   });
 

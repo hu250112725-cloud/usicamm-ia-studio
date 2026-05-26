@@ -46,8 +46,6 @@ El repo incluye `render.yaml`, asi que puedes crear el servicio desde Render com
 
 ```env
 GROQ_API_KEY=tu_key_de_groq
-RESEND_API_KEY=tu_key_de_resend
-EMAIL_FROM=USICAMM IA <tu_email_verificado_en_resend>
 ```
 
 No definas `PORT` en Render. Render asigna el puerto automaticamente y la app ya usa `process.env.PORT`.
@@ -85,20 +83,8 @@ La app crea automaticamente `data/db.json` para guardar usuarios, sesiones y pro
 - Las contrasenas se guardan con hash `scrypt`.
 - Las sesiones usan cookie `HttpOnly` y `SameSite=Lax`.
 - El servidor solo publica `index.html`, `styles.css` y `app.js`; no expone `.env`, `server.js` ni `data/db.json`.
-- Hay limite de intentos para registro, login y verificacion.
-- Las cuentas nuevas deben confirmar un codigo por email.
-
-La verificacion de cuenta usa email real con Resend. Define `NODE_ENV=production` y conecta Resend:
-
-```env
-NODE_ENV=production
-
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=tu_api_key_de_resend
-EMAIL_FROM=USICAMM IA <no-reply@tudominio.com>
-```
-
-Si no configuras Resend, la app devolvera un error y no confirmara cuentas de forma falsa.
+- Hay limite de intentos para registro y login.
+- Las cuentas nuevas entran directo despues del registro.
 
 ## IA
 

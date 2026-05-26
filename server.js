@@ -37,7 +37,7 @@ function loadEnv() {
 }
 
 function emptyDb() {
-  return { users: [], sessions: [], states: {}, verifications: [] };
+  return { users: [], sessions: [], states: {} };
 }
 
 function ensureDb() {
@@ -51,7 +51,6 @@ function readDb() {
   db.users ||= [];
   db.sessions ||= [];
   db.states ||= {};
-  db.verifications ||= [];
   return db;
 }
 
@@ -138,87 +137,9 @@ function publicUser(user) {
     id: user.id,
     name: user.name,
     email: user.email,
-    verificationChannel: "email",
-    verifiedAt: user.verifiedAt || null,
     profile: user.profile,
     createdAt: user.createdAt,
   };
-}
-
-function verificationContact(user) {
-  return user.email;
-}
-
-function maskContact(contact = "") {
-  if (contact.includes("@")) {
-    const [name, domain] = contact.split("@");
-    return `${name.slice(0, 2)}***@${domain}`;
-  }
-  return contact.replace(/\d(?=\d{2})/g, "*");
-}
-
-function makeCode() {
-  return String(crypto.randomInt(100000, 999999));
-}
-
-function hashCode(code) {
-  return crypto.createHash("sha256").update(String(code)).digest("hex");
-}
-
-function createVerification(db, user) {
-  const code = makeCode();
-  db.verifications = db.verifications.filter((item) => item.userId !== user.id);
-  db.verifications.push({
-    userId: user.id,
-    channel: "email",
-    contact: verificationContact(user),
-    codeHash: hashCode(code),
-    attempts: 0,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
-  });
-  return code;
-}
-
-function verificationPayload(user, code) {
-  return {
-    requiresVerification: true,
-    userId: user.id,
-    channel: "email",
-    contact: maskContact(verificationContact(user)),
-  };
-}
-
-async function sendVerificationCode(user, code) {
-  return sendEmailCode(user.email, code);
-}
-
-async function sendEmailCode(email, code) {
-  if (process.env.EMAIL_PROVIDER !== "resend" || !process.env.RESEND_API_KEY) {
-    throw new Error("Configura EMAIL_PROVIDER=resend y RESEND_API_KEY para enviar codigos reales por email.");
-  }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.EMAIL_FROM || "USICAMM IA <onboarding@resend.dev>",
-      to: [email],
-      subject: "Tu codigo de confirmacion USICAMM IA",
-      html: `<p>Tu codigo de confirmacion es:</p><h1>${code}</h1><p>Vence en 10 minutos.</p>`,
-      text: `Tu codigo de confirmacion USICAMM IA es ${code}. Vence en 10 minutos.`,
-    }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || "No se pudo enviar el email de confirmacion.");
-  return { provider: "resend" };
-}
-
-function isVerified(user) {
-  return Boolean(user.verifiedAt);
 }
 
 function defaultState(profile = "primaria") {
@@ -340,7 +261,6 @@ async function handleApi(req, res) {
       const name = String(body.name || "").trim();
       const password = String(body.password || "");
       const profile = String(body.profile || "primaria");
-      const verificationChannel = "email";
 
       if (password.length > 0 && password.length < 8) return json(res, 400, { error: "La contrasena debe tener al menos 8 caracteres." });
       if (!name || !email || !password) return json(res, 400, { error: "Nombre, correo y contraseña son obligatorios." });
@@ -352,17 +272,16 @@ async function handleApi(req, res) {
         name,
         email,
         profile,
-        verificationChannel,
-        verifiedAt: null,
+        verifiedAt: new Date().toISOString(),
         passwordHash: hashPassword(password),
         createdAt: new Date().toISOString(),
       };
       db.users.push(user);
       db.states[user.id] = defaultState(profile);
-      const code = createVerification(db, user);
-      const delivery = await sendVerificationCode(user, code);
+      const token = crypto.randomBytes(32).toString("hex");
+      db.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString(), expiresAt: expiryDate() });
       writeDb(db);
-      return json(res, 201, { ...verificationPayload(user, code), ...delivery });
+      return json(res, 201, { user: publicUser(user), state: db.states[user.id] }, sessionHeader(token));
     }
 
     if (req.method === "POST" && url.pathname === "/api/login") {
@@ -374,54 +293,12 @@ async function handleApi(req, res) {
       if (!user || !verifyPassword(password, user.passwordHash)) {
         return json(res, 401, { error: "Correo o contraseña incorrectos." });
       }
-      if (!isVerified(user)) {
-        const code = createVerification(db, user);
-        const delivery = await sendVerificationCode(user, code);
-        writeDb(db);
-        return json(res, 403, { error: "Confirma tu cuenta para entrar.", ...verificationPayload(user, code), ...delivery });
-      }
+      user.verifiedAt ||= new Date().toISOString();
       const token = crypto.randomBytes(32).toString("hex");
       db.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString(), expiresAt: expiryDate() });
       db.states[user.id] ||= defaultState(user.profile);
       writeDb(db);
       return json(res, 200, { user: publicUser(user), state: db.states[user.id] }, sessionHeader(token));
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/verify") {
-      if (!checkRateLimit(req, "verify", 8)) return json(res, 429, { error: "Demasiados intentos. Espera unos minutos." });
-      const body = await readBody(req);
-      const userId = String(body.userId || "");
-      const code = String(body.code || "").trim();
-      const user = db.users.find((item) => item.id === userId);
-      const verification = db.verifications.find((item) => item.userId === userId);
-      if (!user || !verification) return json(res, 404, { error: "No encontre una verificacion pendiente." });
-      if (new Date(verification.expiresAt) < new Date()) return json(res, 400, { error: "El codigo vencio. Pide uno nuevo." });
-      if (verification.attempts >= 5) return json(res, 429, { error: "Codigo bloqueado por demasiados intentos. Pide uno nuevo." });
-      verification.attempts += 1;
-      if (verification.codeHash !== hashCode(code)) {
-        writeDb(db);
-        return json(res, 400, { error: "Codigo incorrecto." });
-      }
-      user.verifiedAt = new Date().toISOString();
-      db.verifications = db.verifications.filter((item) => item.userId !== user.id);
-      db.states[user.id] ||= defaultState(user.profile);
-      const token = crypto.randomBytes(32).toString("hex");
-      db.sessions.push({ token, userId: user.id, createdAt: new Date().toISOString(), expiresAt: expiryDate() });
-      writeDb(db);
-      return json(res, 200, { user: publicUser(user), state: db.states[user.id] }, sessionHeader(token));
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/resend-verification") {
-      if (!checkRateLimit(req, "resend", 4)) return json(res, 429, { error: "Espera antes de pedir otro codigo." });
-      const body = await readBody(req);
-      const userId = String(body.userId || "");
-      const user = db.users.find((item) => item.id === userId);
-      if (!user) return json(res, 404, { error: "Usuario no encontrado." });
-      if (isVerified(user)) return json(res, 200, { ok: true });
-      const code = createVerification(db, user);
-      const delivery = await sendVerificationCode(user, code);
-      writeDb(db);
-      return json(res, 200, { ...verificationPayload(user, code), ...delivery });
     }
 
     if (req.method === "POST" && url.pathname === "/api/logout") {
